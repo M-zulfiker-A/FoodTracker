@@ -10,7 +10,7 @@ function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Calendar" component={CalendarView} />
+        <Stack.Screen name="CalendarView" component={CalendarView} />
         <Stack.Screen name="FoodForm" component={FoodForm} />
       </Stack.Navigator>
     </NavigationContainer>

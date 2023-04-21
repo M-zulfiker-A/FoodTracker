@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, CheckBox, Button } from 'react-native';
+import { View, Text, CheckBox, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function FoodForm({route}) {
+export default function FoodForm({route , navigation}) {
   const {selectedDate} = route.params
 
   const [breakfastChecked, setBreakfastChecked] = useState(false);
   const [lunchChecked, setLunchChecked] = useState(false);
   const [dinnerChecked, setDinnerChecked] = useState(false);
+  let days =0;
 
   useEffect(()=>{
     (async function(){
@@ -39,7 +40,11 @@ export default function FoodForm({route}) {
         const index = data.findIndex(item => item.date === selectedDate);
         if (index >= 0) {
           // Update existing data for selected date
-          data[index] = foodData;
+          if(foodData.breakfast == false && foodData.lunch == false && foodData.dinner == false){
+            data.splice(index,1)
+          }else{
+            data[index] = foodData;
+          }
         } else {
           // Add new data for selected date
           data.push(foodData);
@@ -50,36 +55,104 @@ export default function FoodForm({route}) {
       } catch (error) {
         console.error(error);
       }
+      finally{
+        const daysDta = await AsyncStorage.getItem('foodData')
+        days = await JSON.parse(daysDta)
+        console.log(days)
+      }
+      navigation.navigate('CalendarView',{days : days.length});
   };
 
   return (
-    <View>
-      <Text>Selected Date: {selectedDate}</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <CheckBox
-          value={breakfastChecked}
-          onValueChange={() => {
-            console.log("pressed");
-            setBreakfastChecked(!breakfastChecked)}
-          }
-        />
-        <Text style={{ marginLeft: 8 }}>Breakfast</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Select the meals you had today</Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <CheckBox
-          value={lunchChecked}
-          onValueChange={() => setLunchChecked(!lunchChecked)}
-        />
-        <Text style={{ marginLeft: 8 }}>Lunch</Text>
+      <View style={styles.content}>
+        <View style={styles.checkboxContainer}>
+          <TouchableOpacity
+            style={[styles.checkbox, breakfastChecked && styles.checkboxChecked]}
+            onPress={() => setBreakfastChecked(!breakfastChecked)}
+          >
+            <Text style={[styles.checkboxLabel,breakfastChecked && styles.checkboxChecked]}>Breakfast</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.checkbox, lunchChecked && styles.checkboxChecked]}
+            onPress={() => setLunchChecked(!lunchChecked)}
+          >
+            <Text style={[styles.checkboxLabel,lunchChecked && styles.checkboxChecked]}>Lunch</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.checkbox, dinnerChecked && styles.checkboxChecked]}
+            onPress={() => setDinnerChecked(!dinnerChecked)}
+          >
+            <Text style={[styles.checkboxLabel , dinnerChecked && styles.checkboxChecked]}>Dinner</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.saveButton} onPress={saveFoodData}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <CheckBox
-          value={dinnerChecked}
-          onValueChange={() => setDinnerChecked(!dinnerChecked)}
-        />
-        <Text style={{ marginLeft: 8 }}>Dinner</Text>
-      </View>
-      <Button title="Submit" onPress={saveFoodData} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FEE8B0',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  header: {
+    width: '100%',
+    backgroundColor: '#F97B22',
+    paddingVertical: 20,
+    alignItems: 'center',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerText: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 20,
+  },
+  checkboxContainer: {
+    alignItems: 'center',
+  },
+  checkbox: {
+    borderWidth: 1,
+    borderColor: '#F97B22',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginVertical: 10,
+  },
+  checkboxLabel: {
+    color: '#F97B22',
+    fontSize: 16,
+    fontWeight: 'bold',
+    },
+    checkboxChecked: {
+    backgroundColor: '#F97B22',
+    color: '#FEE8B0',
+    },
+    saveButton: {
+    backgroundColor: '#F97B22',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginVertical: 20,
+    },
+    saveButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    },
+    });
